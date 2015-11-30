@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Camdroid - List of cameras{% endblock %}
+
+{% block page_content %}
+
+<div class="page-header">
+    <h1>My Cameras</h1>
+</div>
+<a href="{{ url_for('cam.register') }}">Add new camera</a>
+{% if cameras %}
+<ul style="list-style:none; padding:5px; height:300px; ">
+    {% for camera in cameras %}
+    <div style="margin:3pt; padding:10pt;background-color:rgb(200,200,230);float:left">
+        <div style="float:right">
+            <form action="delete/{{camera.id}}">
+                <button type="submit" class="close">&times;</button>
+            </form>
+        </div>
+        <div><a href="/cam/update/{{(camera.id)}}">{{ camera.name }}</a></div>
+        <br>
+        <video src="{{ camera.link }}" 
+               width="320" height="240" controls></video>
+        <br>
+        <a href="{{ camera.link }}">Watch </a><a href="/cam/videos/{{ camera.id }}">Recorded Videos</a>
+    </div>
+    {% endfor %}
+</ul>
+{%endif%}
+<br>
+<div class="page-header">
+    <h1>Shared with me</h1>
+</div>
+{% for group_name, scameras in shared_cams.iteritems() %}
+
+    <h2>{{group_name}}</h2>
+
+<ul style="list-style:none; padding:5px; height:300px; ">
+    {% for camera in scameras %}
+    <div style="margin:3pt; padding:10pt;background-color:rgb(200,200,230);float:left">
+        <div><a href="/cam/update/{{(camera.id)}}">{{ camera.name }}</a></div>
+        <br>
+        <video src="{{ camera.link }}"
+               width="320" height="240" controls></video>
+    </div>
+    <a href="{{ camera.link }}">Watch</a>
+    {% endfor %}
+</ul>
+{% endfor %}
+{% endblock %}

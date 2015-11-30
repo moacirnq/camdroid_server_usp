@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Camdroid - Videos{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>Existing Groups</h1>
+</div>
+<div class="container">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td><b>Inicio</b></td>
+                <td><b>Fim</b></td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for video in videos %}
+                <tr>
+                    <td>{{ video.start_time }}</td>
+                    <td>{{ video.end_time }}</td>
+                <td><a href="{{video.path.replace('app','')}}">Watch</a></td>
+                <!--<td><a href="{{ url_for('static', filename = video.path.replace('static/','')) }}">Watch</a></td>-->
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{%endblock%}

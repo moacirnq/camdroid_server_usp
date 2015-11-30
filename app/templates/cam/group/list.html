@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Camdroid - Groups{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>Existing Groups</h1>
+</div>
+<a href="{{ url_for('cam.group_new') }}">Add new group</a>
+<div class="container">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td><b>Name</b></td>
+                <td><b>Options</b></td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for group in my_groups %}
+                {% if group.name != 'default' %}
+                <tr>
+                    <td>{{ group.name }}</td>
+                    <td><a href="/cam/group/remove/{{group.name}}">Remove</a></td>
+                    <td><a href="/cam/group/member/add/{{group.name}}">Details</a></td>
+                </tr>
+                {%endif%}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{%endblock%}

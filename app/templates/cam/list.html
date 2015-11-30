@@ -4,7 +4,7 @@
 {% block title %}Camdroid - List of cameras{% endblock %}
 
 {% block page_content %}
-
+<p>
 <div class="page-header">
     <h1>My Cameras</h1>
 </div>
@@ -28,12 +28,13 @@
     {% endfor %}
 </ul>
 {%endif%}
-<br>
+<br></p>
+
+<p></p>
 <div class="page-header">
     <h1>Shared with me</h1>
 </div>
 {% for group_name, scameras in shared_cams.iteritems() %}
-
     <h2>{{group_name}}</h2>
 
 <ul style="list-style:none; padding:5px; height:300px; ">
@@ -49,3 +50,4 @@
 </ul>
 {% endfor %}
 {% endblock %}
+</p>

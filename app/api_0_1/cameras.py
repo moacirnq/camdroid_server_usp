@@ -1,6 +1,8 @@
 from flask import jsonify, request, g, abort, url_for, current_app
+
 from datetime import datetime
 
+import unicodedata
 from . import api
 from .authentication import auth
 from .errors import forbidden
@@ -24,17 +26,17 @@ def list():
 @api.route('/alerts')
 @auth.login_required
 def alerts():
-    user = g.current_user
     ret = []
+    user = User.query.filter_by( email=g.current_user.email).first()
+    print user.last_log.__str__()
     for cam in user.cameras:
-        notifications = Alert.query.filter(Alert.time.__str__() >= user.last_log.__str__(), Alert.camera == cam.id).all()
+        notifications = Alert.query.filter(Alert.time >= user.last_log.__str__()).filter(Alert.camera == cam.id).all()
         for alert in notifications:
             ret.append(alert.to_json())
     for cam in user.shared_cameras:
-        notifications = Alert.query.filter(Alert.time.__str__() >= user.last_log.__str__(), Alert.camera == cam.id).all()
+        notifications = Alert.query.filter(Alert.time >= user.last_log.__str__()).filter(Alert.camera == cam.id).all()
         for alert in notifications:
             ret.append(alert.to_json())
-
 
     user.last_log = datetime.now()
     db.session.add(user)
@@ -48,17 +50,18 @@ def alerts():
 def add_camera():
     json = request.json
     user = g.current_user.email
-    name = json.get('name')
-    link = json.get('link')
-    group = json.get('group')
-    username = json.get('username')
-    password = json.get('password')
-    new_cam = User(name=name, src=link, username=username, password=password,
+    name = str(json.get('name'))
+    link = str(json.get('link'))
+    group = str(json.get('group'))
+    username = str(json.get('username'))
+    password = str(json.get('password'))
+    new_cam = Camera(name=name, src=link, username=username, password=password,
                     owner_id=user, group_name=group, group_owner=user)
     db.session.add(new_cam)
     db.session.commit()
-    return jsonify({'URL':url_for('api.get_camera')+new_cam.id})
-
+    ret =  jsonify({'URL': str(url_for('api.get_camera', id=new_cam.id))})
+    print ret
+    return ret
 
 @api.route('/cameras/get/<id>')
 @auth.login_required

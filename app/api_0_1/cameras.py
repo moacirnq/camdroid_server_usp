@@ -10,17 +10,6 @@ from .errors import forbidden
 from ..models import Alert, User, Camera, VideoFile, db
 
 
-@api.route('/user', methods=['GET'])
-def login():
-    a = request.authorization
-    if not a or not verify_password(a.username, a.password):
-        return jsonify({'Login':'Failed'})
-    else:
-        return jsonify({'Login':'OK'})
-
-
-
-
 @api.route('/cameras/list', methods=['GET'])
 @auth.login_required
 def list():

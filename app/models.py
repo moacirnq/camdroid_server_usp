@@ -122,6 +122,7 @@ class Camera(db.Model):
 
     def to_json(self):
         json_camera = {
+            'id': self.id,
             'name' : self.name,
             'owner': self.owner_id,
             'group': self.group_name,

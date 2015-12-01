@@ -139,6 +139,10 @@ class VideoFile(db.Model):
     start_time = db.Column(db.DateTime)
     end_time = db.Column(db.DateTime)
 
+    def to_json(self):
+        return {'src':self.src, 'path': self.path, 'start_time': self.start_time, 'end_time': self.end_time}
+
+
 class Alert(db.Model):
     __tablename__ = 'alerts'
     camera = db.Column(db.Integer, db.ForeignKey('cameras.id', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)

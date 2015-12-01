@@ -4,11 +4,24 @@ from datetime import datetime
 
 import unicodedata
 from . import api
-from .authentication import auth
+from .. import rec_man
+from .authentication import auth, verify_password
 from .errors import forbidden
-from ..models import Alert, User, Camera, db
+from ..models import Alert, User, Camera, VideoFile, db
 
-@api.route('/cameras/list')
+
+@api.route('/user', methods=['GET'])
+def login():
+    a = request.authorization
+    if not a or not verify_password(a.username, a.password):
+        return jsonify({'Login':'Failed'})
+    else:
+        return jsonify({'Login':'OK'})
+
+
+
+
+@api.route('/cameras/list', methods=['GET'])
 @auth.login_required
 def list():
     cameras  = g.current_user.cameras
@@ -23,7 +36,7 @@ def list():
     return jsonify({ 'list': all_cameras })
 
 
-@api.route('/alerts')
+@api.route('/alerts', methods=['GET'])
 @auth.login_required
 def alerts():
     ret = []
@@ -63,7 +76,7 @@ def add_camera():
     print ret
     return ret
 
-@api.route('/cameras/get/<id>')
+@api.route('/cameras/get/<id>', methods=['GET'])
 @auth.login_required
 def get_camera(id):
     cam = Camera.query.filter_by(id=id).first()
@@ -76,7 +89,31 @@ def get_camera(id):
 
 
 @api.route('/videos/<cam_id>')
+@auth.login_required
 def videos(cam_id):
-    pass
+    cam = Camera.query.filter_by(id=cam_id).first()
+    if cam is None:
+        response = jsonify({'error':'bad request', 'message':'Camera does not exist.'})
+        response.status_code = 400
+        return response
+
+    videos = VideoFile.query.filter_by(src=cam_id)
+    ret = [video.to_json() for video in videos]
+    return jsonify({'videos': ret})
+
+
+@api.route('/cameras/remove/<cam_id>', methods=['POST'])
+@auth.login_required
+def remove_camera(cam_id):
+    cam =  Camera.query.filter_by(id=cam_id).first()
+    if cam and cam.owner_id == g.current_user.id:
+        rec_man.remove_camera(cam)
+        db.session.delete(cam)
+        db.session.commit()
+        return jsonify({'Result': 'OK'})
+    else:
+        response = jsonify({'error':'bad request', 'message':'Camera does not exist.'})
+        response.status_code = 400
+        return response
 
 

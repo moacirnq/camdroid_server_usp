@@ -18,7 +18,7 @@ db_session = scoped_session(sessionmaker(autocommit=False,
 
 #gst-launch-1.0 v4l2src ! video/x-raw,width=640,height=480 ! videoscale ! theoraenc ! oggmux ! shout2send ip=127.0.0.1 port=8000 password=hackme mount=/test.ogv
 class CameraRecoder(Thread):
-    def __init__(self, camera, fps=20, size=(640,480), file_duration=30, min_area=1000):
+    def __init__(self, camera, fps=20, size=(640,480), file_duration=300, min_area=1000):
         Thread.__init__(self)
         self.on = True
         self.name = camera.name
@@ -144,6 +144,7 @@ class RecordManager(Thread):
     def add_camera(self, camera):
         ''' Add a camera to the processing queue '''
         self.cameras_lock.acquire()
+
         if self.cameras.get(camera.id, None) is None:
             self.cameras[camera.id] = [camera, CameraRecoder(camera)]
             self.cameras[camera.id][1].start()
@@ -160,13 +161,12 @@ class RecordManager(Thread):
         while True:
             for key,[camera, thr] in self.cameras.iteritems():
                 if not thr.isAlive():
-                    self.cameras_lock.acquire()
                     try:
                         self.cameras[camera.id][1] = CameraRecoder(camera)
                         self.cameras[camera.id][1].start()
                     except:
                         pass
-                    self.cameras_lock.release()
+                    
             time.sleep(50000)
 
     def remove_camera(self, camera):

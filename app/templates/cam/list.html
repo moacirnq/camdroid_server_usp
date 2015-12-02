@@ -21,9 +21,10 @@
         <div><a href="/cam/update/{{(camera.id)}}">{{ camera.name }}</a></div>
         <br>
         <video src="{{ camera.link }}" 
-               width="320" height="240" controls></video>
+               width="320" height="240" controls type="video/ogg"></video>
         <br>
-        <a href="{{ camera.link }}">Watch </a><a href="/cam/videos/{{ camera.id }}">Recorded Videos</a>
+        <a href="{{ camera.link }}">Watch  </a>
+        <a href="/cam/videos/{{ camera.id }}">Recorded Videos</a>
     </div>
     {% endfor %}
 </ul>
@@ -45,7 +46,7 @@
         <video src="{{ camera.link }}"
                width="320" height="240" controls></video>
     </div>
-    <a href="{{ camera.link }}">Watch</a>
+    <a href="{{ camera.link }}">Watch </a>
     {% endfor %}
 </ul>
 {% endfor %}

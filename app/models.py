@@ -114,10 +114,13 @@ class Camera(db.Model):
     def link(self):
         ret = ''
         if self.username and self.username != '':
-            ret += self.username + ':'
+            ret += 'http://' + self.username + ':'
             if self.password and self.password != '':
-                ret += self.password
-        ret += self.src
+                ret += self.password + '@'
+        if ret != '':
+            ret += self.src.replace('http://', '')
+        else:
+            ret += self.src
         return ret
 
     def to_json(self):
@@ -131,7 +134,7 @@ class Camera(db.Model):
         return json_camera
 
 
-class VideoFile(db.Model):
+class  VideoFile(db.Model):
     __tablename__ = 'video_files'
     src = db.Column(db.Integer, db.ForeignKey('cameras.id', onupdate='CASCADE', ondelete='CASCADE'))
     camera = db.relationship('Camera')
@@ -155,3 +158,7 @@ class Alert(db.Model):
                 'video':self.video}
 
 
+class Camdroid(db.Model):
+    __tablename__ = 'camdroids'
+    id = db.Column(db.Integer, primary_key = True)
+    port = db.Column(db.Integer)

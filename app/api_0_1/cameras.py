@@ -10,7 +10,7 @@ from .errors import forbidden
 from ..models import Alert, User, Camera, VideoFile, db
 
 
-@api.route('/cameras/list', methods=['GET'])
+@api.route('/cameras/list', methods=['GET', 'POST'])
 @auth.login_required
 def list():
     cameras  = g.current_user.cameras
@@ -55,12 +55,19 @@ def add_camera():
     name = str(json.get('name'))
     link = str(json.get('link'))
     group = str(json.get('group'))
+    if group == 'None':
+        group = 'default'
     username = str(json.get('username'))
+    if username == 'None':
+        username = ''
     password = str(json.get('password'))
+    if password == 'None':
+        password = ''
     new_cam = Camera(name=name, src=link, username=username, password=password,
                     owner_id=user, group_name=group, group_owner=user)
     db.session.add(new_cam)
     db.session.commit()
+    rec_man.add_camera(new_cam)
     ret =  jsonify({'URL': str(url_for('api.get_camera', id=new_cam.id))})
     print ret
     return ret

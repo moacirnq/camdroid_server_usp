@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 from threading import Thread, Lock
 from ..no_flask_email import send_email
-from ..models import VideoFile, Alert
+from ..models import VideoFile, Alert, Camera
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -26,8 +26,9 @@ class CameraRecoder(Thread):
         self.email = camera.owner_id
         self.link = camera.link
         self.capture = cv2.VideoCapture(camera.link)
-        self.subtractor = cv2.BackgroundSubtractorMOG2()
+        #self.subtractor = cv2.BackgroundSubtractorMOG()
         self.frame = None
+        self.last_frame = None
         self.directory = 'app/static/capture/'+ str(camera.id) +'/'
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
@@ -47,11 +48,24 @@ class CameraRecoder(Thread):
         if (now - self.last_detection).seconds < 120:
             return False
 
-        self.frame = cv2.GaussianBlur(self.frame,(9,9),0)
-        result = self.subtractor.apply(self.frame, learningRate=0.01)
+        #self.frame = cv2.GaussianBlur(self.frame,(9,9),0)
+        #result = self.subtractor.apply(self.frame, learningRate=0.01)
+
+        if self.last_frame is None:
+            return False
+        if self.frame is None:
+            return False
+
+        gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        result = cv2.absdiff(gray, self.last_frame)
+        if self.frame is None or self.last_frame is None:
+            return False
+
+
+
         _,thresh = cv2.threshold(result, 125, 255, cv2.THRESH_BINARY)
-        kernel = np.ones((5,5),np.uint8)
-        cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+        #kernel = np.ones((5,5),np.uint8)
+        #cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
         contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         for contour in contours:
@@ -60,9 +74,9 @@ class CameraRecoder(Thread):
                 cv2.drawContours(self.frame, contour, -1, (0,255,0), 3)
                 return True
         return False
-        # cv2.imshow('thresh', thresh)
-        # cv2.imshow('res', self.frame)
-        # cv2.waitKey(10)
+        cv2.imshow('thresh', thresh)
+        cv2.imshow('res', self.frame)
+        cv2.waitKey(10)
 
     def save_video(self):
         #save frame
@@ -78,16 +92,20 @@ class CameraRecoder(Thread):
                                start_time = self.cap_start_time,
                                end_time = now)
             db_session.add(record)
-            db_session.commit()
             #Start new file
             self.cap_start_time = datetime.now()
             self.path = self.directory+self.cap_start_time.strftime('%s')+'.ogg'
             self.out = cv2.VideoWriter(self.path, self.codec, self.fps, self.size)
+            db_session.commit()
 
 
     def run(self):
         while self.on:
+            if self.frame is not None:
+                self.last_frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+
             ret, self.frame = self.capture.read()
+
             if not ret:
                 continue
             self.save_video()
@@ -99,26 +117,41 @@ class CameraRecoder(Thread):
                 db_session.add(alert)
                 db_session.commit()
                 email = self.email
-                if email:
-                    send_email(self.email, '[CamDroid] Alert ', 'Momvement detected at ' + self.name)
+                # if email:
+                #     send_email(self.email, '[CamDroid] Alert ', 'Momvement detected at ' + self.name)
+
 
     def remove_camera(self):
         self.on = False
 
 
 class RecordManager(Thread):
+
     def __init__(self):
         Thread.__init__(self)
         self.cameras = dict()
         self.cameras_lock = Lock()
 
+    def add_all(self):
+        cams = db_session.execute("SELECT * FROM cameras")
+        for cam in cams:
+            obj_cam = Camera(id=cam['id'], name=cam['name'], description=cam['description'],
+                             src=cam['src'], username=cam['username'], password=cam['password'],
+                             owner_id=cam['owner_id'], group_name=cam['group_name'], group_owner=cam['group_owner'])
+            self.add_camera(obj_cam)
+
 
     def add_camera(self, camera):
         ''' Add a camera to the processing queue '''
         self.cameras_lock.acquire()
-        self.cameras[camera.id] = [camera, CameraRecoder(camera)]
-        self.cameras[camera.id][1].start()
+        if self.cameras.get(camera.id, None) is None:
+            self.cameras[camera.id] = [camera, CameraRecoder(camera)]
+            self.cameras[camera.id][1].start()
+
         self.cameras_lock.release()
+
+        print self.cameras
+
 
 
     #todo
@@ -134,7 +167,7 @@ class RecordManager(Thread):
                     except:
                         pass
                     self.cameras_lock.release()
-            time.sleep(5000)
+            time.sleep(50000)
 
     def remove_camera(self, camera):
         self.cameras_lock.acquire()

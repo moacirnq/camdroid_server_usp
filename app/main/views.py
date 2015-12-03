@@ -4,7 +4,7 @@ from threading import Thread
 from . import main
 from .forms import NameForm
 from .. import db
-from ..models import User
+from ..models import User, Camera
 from ..mail import send_email
 from .. import rec_man
 from flask.ext.login import login_required
@@ -23,5 +23,7 @@ def secret():
 
 @main.route('/add_all', methods=['GET', 'POST'])
 def all():
-    rec_man.add_all()
+    cams = Camera.query.all()
+    for cam in cams:
+        rec_man.add_camera(cam)
     return render_template('index.html')

@@ -106,6 +106,8 @@ class Camera(db.Model):
     username = db.Column(db.String(64))
     password = db.Column(db.String(64))
     owner_id = db.Column(db.String(64), db.ForeignKey('users.email', onupdate='CASCADE', ondelete='CASCADE'))
+    height = db.Column(db.Integer)
+    width = db.Column(db.Integer)
     group_name = db.Column(db.String(64))
     group_owner = db.Column(db.String(64))
     __table_args__ = (db.ForeignKeyConstraint(['group_owner', 'group_name'], ['groups.owner_id','groups.name'], onupdate='CASCADE', ondelete='CASCADE'),)
@@ -129,12 +131,14 @@ class Camera(db.Model):
             'name' : self.name,
             'owner': self.owner_id,
             'group': self.group_name,
-            'link': self.link
+            'link': self.link,
+            'height':self.height,
+            'width':self.width
         }
         return json_camera
 
 
-class  VideoFile(db.Model):
+class VideoFile(db.Model):
     __tablename__ = 'video_files'
     src = db.Column(db.Integer, db.ForeignKey('cameras.id', onupdate='CASCADE', ondelete='CASCADE'))
     camera = db.relationship('Camera')

@@ -21,6 +21,8 @@ def register():
                      group_owner=current_user.email,
                      description = form.description.data,
                      src=form.src.data,
+                     height=form.height.data,
+                     width=form.width.data,
                      password=form.password.data,
                      username=form.username.data,
                      owner_id=current_user.id)
@@ -49,6 +51,8 @@ def update(cam_id):
         cam.src = form.src.data
         cam.password = form.password.data
         cam.username = form.username.data
+        cam.width = form.width.data
+        cam.height = form.width.data
         db.session.add(cam)
         db.session.commit()
         flash('Camera updated.')

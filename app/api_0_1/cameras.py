@@ -54,7 +54,9 @@ def add_camera():
     user = g.current_user.email
     name = str(json.get('name'))
     link = str(json.get('link'))
-    group = str(json.get('group'))
+    height = str(json.get('height',240))
+    width = int(json.get('width',320))
+    group = int(json.get('group'))
     if group == 'None':
         group = 'default'
     username = str(json.get('username'))
@@ -64,7 +66,7 @@ def add_camera():
     if password == 'None':
         password = ''
     new_cam = Camera(name=name, src=link, username=username, password=password,
-                    owner_id=user, group_name=group, group_owner=user)
+                     height=height, width=width, owner_id=user, group_name=group, group_owner=user)
     db.session.add(new_cam)
     db.session.commit()
     rec_man.add_camera(new_cam)

@@ -1,11 +1,14 @@
 from flask_wtf import Form
 from wtforms import StringField, SubmitField, PasswordField, TextAreaField, SelectField
+from wtforms.fields import IntegerField
 from wtforms.validators import Required
 
 class CameraRegistrationForm(Form):
     name = StringField('Camera name', validators=[Required()])
     src = StringField('Link to video', validators=[Required()])
     group = SelectField('Group')
+    width = IntegerField('Width', validators=[Required()])
+    height = IntegerField('Height', validators=[Required()])
     username = StringField('Username', validators=[])
     password = PasswordField('Password', validators=[])
     description = TextAreaField('Description')

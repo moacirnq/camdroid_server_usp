@@ -114,7 +114,6 @@ def details(camera_id):
 def group_new():
     form = NewGroupRegistrationForm()
     if form.validate_on_submit():
-        #try:
         group = Group.query.filter_by(owner_id=current_user.email, name=form.name.data).all()
         if not len(group):
             group = Group(owner_id=current_user.email,

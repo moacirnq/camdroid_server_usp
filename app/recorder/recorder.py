@@ -18,7 +18,7 @@ db_session = scoped_session(sessionmaker(autocommit=False,
 
 #gst-launch-1.0 v4l2src ! video/x-raw,width=640,height=480 ! videoscale ! theoraenc ! oggmux ! shout2send ip=127.0.0.1 port=8000 password=hackme mount=/test.ogv
 class CameraRecoder(Thread):
-    def __init__(self, camera, fps=20, file_duration=300, min_area=1000):
+    def __init__(self, camera, fps=20, file_duration=60, min_area=1000):
         Thread.__init__(self)
         self.on = True
         self.name = camera.name
@@ -48,7 +48,7 @@ class CameraRecoder(Thread):
 
     def detect_motion(self):
         now = datetime.now()
-        if (now - self.last_detection).seconds < 120:
+        if (now - self.last_detection).seconds < 60:
             return False
 
         # if self.last_frame is None:
@@ -72,6 +72,8 @@ class CameraRecoder(Thread):
                 self.last_detection = datetime.now()
                 cv2.drawContours(self.frame, contour, -1, (0,255,0), 3)
                 ret = True
+        cv2.imshow(str(self.id), self.frame)
+        cv2.waitKey(10)
         return ret
 
     def save_video(self):
@@ -97,28 +99,28 @@ class CameraRecoder(Thread):
 
     def run(self):
         while self.on:
-            try:
-                if self.frame is not None:
-                    self.last_frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+            # try:
+            if self.frame is not None:
+                self.last_frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
 
-                ret, self.frame = self.capture.read()
+            ret, self.frame = self.capture.read()
 
-                if not ret:
-                    continue
-
-                self.save_video()
-                if self.detect_motion():
-                    alert = Alert(camera = self.id,
-                                  video = self.path,
-                                  time = datetime.now()
-                                  )
-                    db_session.add(alert)
-                    db_session.commit()
-
-                # cv2.imshow('res', self.frame)
-                # cv2.waitKey(10)
-            except:
+            if not ret:
                 continue
+
+            self.save_video()
+            if self.detect_motion():
+                alert = Alert(camera = self.id,
+                              video = self.path,
+                              time = datetime.now()
+                              )
+                db_session.add(alert)
+                db_session.commit()
+
+                # cv2.imshow(str(self.id), self.frame)
+                # cv2.waitKey(10)
+            # except:
+            #     continue
             # email = self.email
             # if email:
             #     send_email(self.email, '[CamDroid] Alert ', 'Momvement detected at ' + self.name)
